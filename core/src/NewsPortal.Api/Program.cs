@@ -1,31 +1,21 @@
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using Microsoft.EntityFrameworkCore;
-using NewsPortal.Business.IServices;
-using NewsPortal.Business.Services;
-using NewsPortal.Business.Validators;
-using NewsPortal.Data;
-using NewsPortal.Data.IRepositories;
-using NewsPortal.Data.Repositories;
+using NewsPortal.Api.Helpers;
+using NewsPortal.Api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddAutoMapper(typeof(ArticleService));
+builder.Services.AddCommonServices();
 
+builder.Services.AddApplicationServices();
 
-builder.Services.AddScoped<IArticleService, ArticleService>();
-builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
+builder.Services.AddDbContext(builder.Configuration);
 
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-
-builder.Services.AddDbContext<NewsPortalDbContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+var corsConfiguration = builder.Configuration.GetSection("Cors").Get<CorsConfiguration>();
+builder.Services.AddCorsConfiguration(corsConfiguration!);
 
 builder.Services.AddControllers();
 
-builder.Services.AddValidatorsFromAssemblyContaining<GetAllArticlesRequestValidator>();
+builder.Services.AddFluentValidators();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -43,6 +33,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
+
+app.UseCors(corsConfiguration!.PolicyName);
 
 app.MapControllers();
 

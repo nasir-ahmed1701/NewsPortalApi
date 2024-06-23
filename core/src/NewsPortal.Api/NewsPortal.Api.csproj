@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -17,10 +17,6 @@
   <ItemGroup>
     <ProjectReference Include="..\NewsPortal.Business\NewsPortal.Business.csproj" />
     <ProjectReference Include="..\NewsPortal.Data\NewsPortal.Data.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>

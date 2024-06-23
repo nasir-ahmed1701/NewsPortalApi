@@ -6,5 +6,8 @@ namespace NewsPortal.Business.IServices
     {
         Task<Result<PaginationResult<Article>>> GetAllArticlesAsync(GetAllArticlesRequest filterRequest);
         Task<Result<Article>> GetArticleAsync(int id);
+        Task<Result<int?>> CreateArticleAsync(CreateArticleRequest request);
+        Task<Result<Article>> UpdateArticleAsync(int id, UpdateArticleRequest request);
+        Task<ResultBase> DeleteArticleAsync(int id);
     }
 }

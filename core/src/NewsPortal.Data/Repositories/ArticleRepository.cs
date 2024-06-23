@@ -67,8 +67,6 @@ namespace NewsPortal.Data.Repositories
         #endregion
 
         #region Private Methods
-
-
         private IQueryable<ArticleEntity> ApplyFilters(IQueryable<ArticleEntity> query, string searchText)
         {
             if (!string.IsNullOrWhiteSpace(searchText))

@@ -2,6 +2,7 @@
 using FluentValidation;
 using NewsPortal.Business.IServices;
 using NewsPortal.Business.Models;
+using NewsPortal.Data.Entities;
 using NewsPortal.Data.IRepositories;
 using NewsPortal.Data.Models;
 
@@ -10,7 +11,9 @@ namespace NewsPortal.Business.Services
     public class ArticleService(
         IArticleRepository articleRepository,
         IMapper mapper,
-        IValidator<GetAllArticlesRequest> getAllArticlesRequestValdiator) : IArticleService
+        IValidator<GetAllArticlesRequest> getAllArticlesRequestValdiator,
+        IValidator<CreateArticleRequest> createArticleRequestValidator,
+        IValidator<UpdateArticleRequest> updateArticleRequestValidator) : IArticleService
     {
         private readonly IArticleRepository _articleRepository = articleRepository;
         private readonly IMapper _mapper = mapper;
@@ -45,7 +48,7 @@ namespace NewsPortal.Business.Services
         {
             if (id <= 0)
             {
-                var errors = new string[] { "id must be greater than 0" };
+                var errors = new string[] { "Id must be greater than 0" };
                 return new Result<Article>(errors: errors, data: null);
             }
 
@@ -60,6 +63,79 @@ namespace NewsPortal.Business.Services
             var article = _mapper.Map<Article>(result);
 
             return new Result<Article>(errors: null, data: article);
+        }
+
+        public async Task<Result<int?>> CreateArticleAsync(CreateArticleRequest request)
+        {
+            var validationResult = await createArticleRequestValidator.ValidateAsync(request);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors.Select(x => x.ErrorMessage);
+                return new Result<int?>(errors: errors, data: null);
+            }
+
+            var createEntity = _mapper.Map<ArticleEntity>(request);
+
+            createEntity.CreatedDateTimeUtc = DateTime.UtcNow;
+
+            var result = await _articleRepository.CreateArticleAsync(createEntity);
+
+            await _articleRepository.SaveChangesAsync();
+
+            return new Result<int?>(errors: null, data: result.Id);
+        }
+
+        public async Task<Result<Article>> UpdateArticleAsync(int id, UpdateArticleRequest request)
+        {
+            var validationResult = await updateArticleRequestValidator.ValidateAsync(request);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors.Select(x => x.ErrorMessage);
+                return new Result<Article>(errors: errors, data: null);
+            }
+
+            var existingEntity = await _articleRepository.GetArticleAsync(id);
+
+            if (existingEntity is null)
+            {
+                var errors = new string[] { $"Article not found for the id {id}" };
+                return new Result<Article>(errors: errors, data: null);
+            }
+
+            existingEntity.Title = request.Title;
+            existingEntity.Description = request.Description;
+            existingEntity.CategoryId = request.CategoryId;
+
+            await _articleRepository.SaveChangesAsync();
+
+            var result = await GetArticleAsync(existingEntity.Id);
+
+            return result;
+        }
+
+        public async Task<ResultBase> DeleteArticleAsync(int id)
+        {
+            if (id <= 0)
+            {
+                var errors = new string[] { $"Id must be greater than 0" };
+                return new Result<int?>(errors: errors, data: null);
+            }
+
+            var existingEntity = await _articleRepository.GetArticleAsync(id);
+
+            if (existingEntity is null)
+            {
+                var errors = new string[] { $"Article not found for the id {id}" };
+                return new Result<int?>(errors: errors, data: null);
+            }
+
+            _articleRepository.DeleteArticle(existingEntity);
+
+            await _articleRepository.SaveChangesAsync();
+
+            return new ResultBase(errors: null);
         }
     }
 }

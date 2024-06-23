@@ -19,9 +19,9 @@ namespace NewsPortal.Business.Services
         private readonly IMapper _mapper = mapper;
         private readonly IValidator<GetAllArticlesRequest> _getAllArticlesRequestValdiator = getAllArticlesRequestValdiator;
 
-        public async Task<Result<PaginationResult<Article>>> GetAllArticlesAsync(GetAllArticlesRequest getAllArticlesRequest)
+        public async Task<Result<PaginationResult<Article>>> GetAllArticlesAsync(GetAllArticlesRequest getAllArticlesRequest, CancellationToken cancellationToken = default)
         {
-            var validationResult = await _getAllArticlesRequestValdiator.ValidateAsync(getAllArticlesRequest);
+            var validationResult = await _getAllArticlesRequestValdiator.ValidateAsync(getAllArticlesRequest, cancellationToken);
 
             if (!validationResult.IsValid)
             {
@@ -31,7 +31,7 @@ namespace NewsPortal.Business.Services
 
             var getAllArticlesDto = _mapper.Map<GetAllArticlesDto>(getAllArticlesRequest);
 
-            var result = await _articleRepository.GetAllArticlesAsync(getAllArticlesDto);
+            var result = await _articleRepository.GetAllArticlesAsync(getAllArticlesDto, cancellationToken);
 
             var articles = _mapper.Map<IEnumerable<Article>>(result.Item2);
 
@@ -44,7 +44,7 @@ namespace NewsPortal.Business.Services
             return new Result<PaginationResult<Article>>(errors: null, data: paginationResult);
         }
 
-        public async Task<Result<Article>> GetArticleAsync(int id)
+        public async Task<Result<Article>> GetArticleAsync(int id, CancellationToken cancellationToken = default)
         {
             if (id <= 0)
             {
@@ -65,9 +65,9 @@ namespace NewsPortal.Business.Services
             return new Result<Article>(errors: null, data: article);
         }
 
-        public async Task<Result<int?>> CreateArticleAsync(CreateArticleRequest request)
+        public async Task<Result<int?>> CreateArticleAsync(CreateArticleRequest request, CancellationToken cancellationToken = default)
         {
-            var validationResult = await createArticleRequestValidator.ValidateAsync(request);
+            var validationResult = await createArticleRequestValidator.ValidateAsync(request, cancellationToken);
 
             if (!validationResult.IsValid)
             {
@@ -79,16 +79,16 @@ namespace NewsPortal.Business.Services
 
             createEntity.CreatedDateTimeUtc = DateTime.UtcNow;
 
-            var result = await _articleRepository.CreateArticleAsync(createEntity);
+            var result = await _articleRepository.CreateArticleAsync(createEntity, cancellationToken);
 
-            await _articleRepository.SaveChangesAsync();
+            await _articleRepository.SaveChangesAsync(cancellationToken);
 
             return new Result<int?>(errors: null, data: result.Id);
         }
 
-        public async Task<Result<Article>> UpdateArticleAsync(int id, UpdateArticleRequest request)
+        public async Task<Result<Article>> UpdateArticleAsync(int id, UpdateArticleRequest request, CancellationToken cancellationToken = default)
         {
-            var validationResult = await updateArticleRequestValidator.ValidateAsync(request);
+            var validationResult = await updateArticleRequestValidator.ValidateAsync(request, cancellationToken);
 
             if (!validationResult.IsValid)
             {
@@ -96,7 +96,7 @@ namespace NewsPortal.Business.Services
                 return new Result<Article>(errors: errors, data: null);
             }
 
-            var existingEntity = await _articleRepository.GetArticleAsync(id);
+            var existingEntity = await _articleRepository.GetArticleAsync(id, cancellationToken);
 
             if (existingEntity is null)
             {
@@ -108,14 +108,14 @@ namespace NewsPortal.Business.Services
             existingEntity.Description = request.Description;
             existingEntity.CategoryId = request.CategoryId;
 
-            await _articleRepository.SaveChangesAsync();
+            await _articleRepository.SaveChangesAsync(cancellationToken);
 
-            var result = await GetArticleAsync(existingEntity.Id);
+            var result = await GetArticleAsync(existingEntity.Id, cancellationToken);
 
             return result;
         }
 
-        public async Task<ResultBase> DeleteArticleAsync(int id)
+        public async Task<ResultBase> DeleteArticleAsync(int id, CancellationToken cancellationToken = default)
         {
             if (id <= 0)
             {
@@ -123,7 +123,7 @@ namespace NewsPortal.Business.Services
                 return new Result<int?>(errors: errors, data: null);
             }
 
-            var existingEntity = await _articleRepository.GetArticleAsync(id);
+            var existingEntity = await _articleRepository.GetArticleAsync(id, cancellationToken);
 
             if (existingEntity is null)
             {
@@ -133,7 +133,7 @@ namespace NewsPortal.Business.Services
 
             _articleRepository.DeleteArticle(existingEntity);
 
-            await _articleRepository.SaveChangesAsync();
+            await _articleRepository.SaveChangesAsync(cancellationToken);
 
             return new ResultBase(errors: null);
         }

@@ -1,6 +1,4 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NewsPortal.Business.IServices;
 using NewsPortal.Business.Models;
 using System.ComponentModel.DataAnnotations;
@@ -23,11 +21,13 @@ namespace NewsPortal.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Result<PaginationResult<Article>>))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Result<PaginationResult<Article>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResultBase))]
-        public async Task<IActionResult> GetAllArticles([FromBody, Required] GetAllArticlesRequest request)
+        public async Task<IActionResult> GetAllArticlesAsync(
+            [FromBody, Required] GetAllArticlesRequest request,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var response = await _articleService.GetAllArticlesAsync(request);
+                var response = await _articleService.GetAllArticlesAsync(request, cancellationToken);
 
                 return response.IsSuccessfull
                     ? Ok(response)
@@ -45,11 +45,13 @@ namespace NewsPortal.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Result<Article>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Result<Article>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResultBase))]
-        public async Task<IActionResult> GetArticle([FromRoute, Required] int id)
+        public async Task<IActionResult> GetArticleAsync(
+            [FromRoute, Required] int id,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var response = await _articleService.GetArticleAsync(id);
+                var response = await _articleService.GetArticleAsync(id, cancellationToken);
 
                 return response.IsSuccessfull
                     ? Ok(response)
@@ -66,11 +68,13 @@ namespace NewsPortal.Api.Controllers
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Result<int?>))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Result<int?>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResultBase))]
-        public async Task<IActionResult> CreateArticle([FromBody, Required] CreateArticleRequest request)
+        public async Task<IActionResult> CreateArticleAsync(
+            [FromBody, Required] CreateArticleRequest request,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var result = await _articleService.CreateArticleAsync(request);
+                var result = await _articleService.CreateArticleAsync(request, cancellationToken);
 
                 return result.IsSuccessfull
                     ? CreatedAtAction("GetArticle", new { id = result.Data }, result)
@@ -88,11 +92,13 @@ namespace NewsPortal.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Result<Article>))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Result<Article>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResultBase))]
-        public async Task<IActionResult> UpdateArticle([FromRoute, Required] int id, [FromBody, Required] UpdateArticleRequest request)
+        public async Task<IActionResult> UpdateArticleAsync([FromRoute, Required] int id,
+            [FromBody, Required] UpdateArticleRequest request,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var result = await _articleService.UpdateArticleAsync(id, request);
+                var result = await _articleService.UpdateArticleAsync(id, request, cancellationToken);
 
                 return result.IsSuccessfull
                     ? Ok(result)
@@ -110,11 +116,11 @@ namespace NewsPortal.Api.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResultBase))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResultBase))]
-        public async Task<IActionResult> DeleteArticle([FromRoute, Required] int id)
+        public async Task<IActionResult> DeleteArticleAsync([FromRoute, Required] int id, CancellationToken cancellationToken)
         {
             try
             {
-                var result = await _articleService.DeleteArticleAsync(id);
+                var result = await _articleService.DeleteArticleAsync(id, cancellationToken);
 
                 return result.IsSuccessfull
                     ? NoContent()

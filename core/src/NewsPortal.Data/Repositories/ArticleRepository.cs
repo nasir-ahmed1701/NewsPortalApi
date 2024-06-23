@@ -5,17 +5,15 @@ using NewsPortal.Data.Models;
 
 namespace NewsPortal.Data.Repositories
 {
-    public class ArticleRepository : IArticleRepository
+    public class ArticleRepository(NewsPortalDbContext dbContext) : IArticleRepository
     {
-        private readonly NewsPortalDbContext _dbContext;
-
-        public ArticleRepository(NewsPortalDbContext dbContext) => _dbContext = dbContext;
+        private readonly NewsPortalDbContext _dbContext = dbContext;
 
         #region Public Methods
 
-        public async Task<int> SaveChangesAsync()
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            return await _dbContext.SaveChangesAsync();
+            return await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         public int SaveChanges()
@@ -23,13 +21,13 @@ namespace NewsPortal.Data.Repositories
             return _dbContext.SaveChanges();
         }
 
-        public async Task<(int, IEnumerable<ArticleEntity>)> GetAllArticlesAsync(GetAllArticlesDto filter)
+        public async Task<(int, IEnumerable<ArticleEntity>)> GetAllArticlesAsync(GetAllArticlesDto filter, CancellationToken cancellationToken = default)
         {
             var query = _dbContext.Articles.Include(x => x.Category).AsQueryable();
 
             query = ApplyFilters(query, filter.SearchText!);
 
-            var totalCount = await query.CountAsync();
+            var totalCount = await query.CountAsync(cancellationToken: cancellationToken);
 
             List<ArticleEntity> result = [];
 
@@ -39,24 +37,24 @@ namespace NewsPortal.Data.Repositories
 
                 query = ApplyPagination(query, filter.PageNumber, filter.PageSize);
 
-                result = await query.ToListAsync();
+                result = await query.ToListAsync(cancellationToken: cancellationToken);
             }
 
             return (totalCount, result);
         }
 
-        public async Task<ArticleEntity?> GetArticleAsync(int id)
+        public async Task<ArticleEntity?> GetArticleAsync(int id, CancellationToken cancellationToken = default)
         {
             var entity = await _dbContext.Articles
                   .Include(x => x.Category)
-                  .FirstOrDefaultAsync(x => x.Id == id);
+                  .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: cancellationToken);
 
             return entity;
 
         }
-        public async Task<ArticleEntity> CreateArticleAsync(ArticleEntity entity)
+        public async Task<ArticleEntity> CreateArticleAsync(ArticleEntity entity, CancellationToken cancellationToken = default)
         {
-            await _dbContext.Articles.AddAsync(entity);
+            await _dbContext.Articles.AddAsync(entity, cancellationToken);
             return entity;
         }
 
